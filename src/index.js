@@ -7,6 +7,8 @@ const express = require('express');
 const cors = require('cors');
 
 const { connectDB } = require('./config/db');
+const productoRoutes = require('./routes/productoRoutes'); // NUEVO
+const errorHandler = require('./middleware/errorHandler');   // NUEVO
 
 const app = express();
 
@@ -16,11 +18,20 @@ app.use(cors());         // permite requests desde otros orígenes/dominios
 app.use(express.json());  // parsea el body de requests como JSON automáticamente
 
 // Ruta de healthcheck: confirma que el servidor está vivo y respondiendo.
-// Las rutas reales de /api/productos, /api/auth, etc. se agregan a partir
-// de la Fase 2 (CRUD) y Fase 3 (auth).
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'constructodo-inventory-api' });
 });
+
+// NUEVO: monta el router de productos bajo el prefijo /api/productos.
+// A partir de aquí, las rutas relativas que definiste en
+// productoRoutes.js ('/', '/:id') se convierten en las rutas reales:
+// GET /api/productos, GET /api/productos/:id, etc.
+app.use('/api/productos', productoRoutes);
+
+// NUEVO: middleware de manejo de errores. SIEMPRE al final, después de
+// todas las rutas — es lo que atrapa cualquier next(error) que venga
+// de productoController.js.
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
